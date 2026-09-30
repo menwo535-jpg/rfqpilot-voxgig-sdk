@@ -1,0 +1,30 @@
+{
+  "mode": "real loopback HTTP; no test-mode mock",
+  "cases": 6,
+  "results": [
+    {
+      "name": "live mode is enabled",
+      "passed": true
+    },
+    {
+      "name": "matched TXT draft retains exact decimal result and artifacts",
+      "passed": true
+    },
+    {
+      "name": "unmatched TXT remains REVIEW_REQUIRED with no complete total",
+      "passed": true
+    },
+    {
+      "name": "invalid payload surfaces HTTP 422",
+      "passed": true
+    },
+    {
+      "name": "wrong private local credential surfaces HTTP 401",
+      "passed": true
+    },
+    {
+      "name": "PDF sample retains six rows, four reviews, USD32.50 subtotal and XLSX",
+      "passed": true
+    }
+  ]
+}

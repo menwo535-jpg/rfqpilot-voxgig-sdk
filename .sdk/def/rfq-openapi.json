@@ -1,0 +1,52 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "RFQ Pilot API",
+    "version": "1.0.0",
+    "description": "An existing personal quotation-processing API. Processes synthetic TXT or text-PDF requests against an approved CSV catalogue. A successful draft is not customer approval."
+  },
+  "servers": [{"url": "http://127.0.0.1:8765"}],
+  "security": [{"bearerAuth": []}],
+  "paths": {
+    "/quote": {
+      "post": {
+        "operationId": "createQuote",
+        "tags": ["quote"],
+        "summary": "Process an RFQ into a draft and review artifacts",
+        "requestBody": {
+          "required": true,
+          "content": {"application/json": {"schema": {"$ref": "#/components/schemas/QuoteRequest"}}}
+        },
+        "responses": {
+          "200": {"description": "Processing completed; inspect quote.status and review_count before using amounts", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/QuoteResult"}}}},
+          "401": {"description": "Valid bearer token required", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ApiError"}}}},
+          "413": {"description": "Request exceeds demo size limit", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ApiError"}}}},
+          "422": {"description": "Invalid input", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ApiError"}}}},
+          "503": {"description": "Requested format dependency unavailable", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ApiError"}}}}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer"}},
+    "schemas": {
+      "QuoteRequest": {
+        "type": "object", "additionalProperties": false,
+        "required": ["rfq", "catalogue_csv"],
+        "properties": {
+          "rfq": {"type": "object", "additionalProperties": false, "required": ["format", "content"], "properties": {"format": {"type": "string", "enum": ["txt", "pdf_base64"]}, "content": {"type": "string", "minLength": 1}}},
+          "catalogue_csv": {"type": "string", "minLength": 1},
+          "include_xlsx": {"type": "boolean", "default": false}
+        }
+      },
+      "QuoteResult": {
+        "type": "object", "required": ["quote", "artifacts"],
+        "properties": {
+          "quote": {"type": "object", "description": "Original processor result; retains rows, review flags and exact decimal amounts as strings", "additionalProperties": true},
+          "artifacts": {"type": "object", "required": ["csv_utf8", "review_html"], "properties": {"csv_utf8": {"type": "string"}, "review_html": {"type": "string"}, "xlsx_base64": {"type": "string", "format": "byte"}}}
+        }
+      },
+      "ApiError": {"type": "object", "required": ["error"], "properties": {"error": {"type": "string"}}}
+    }
+  }
+}

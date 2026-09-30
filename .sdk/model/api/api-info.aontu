@@ -1,0 +1,27 @@
+# API Information
+
+
+main: {
+  kit: {
+    info: {
+      description: "An existing personal quotation-processing API. Processes synthetic TXT or text-PDF requests against an approved CSV catalogue. A successful draft is not customer approval."
+      security: {
+        in: "header"
+        name: "Authorization"
+        prefix: "Bearer"
+        scheme: "bearerAuth"
+        type: "http"
+      }
+      servers: [
+        {
+          url: "http://127.0.0.1:8765"
+        }
+      ]
+      summary: "An existing personal quotation-processing API."
+      title: "RFQ Pilot API"
+      version: "1.0.0"
+      website: "http://127.0.0.1"
+    }
+  }
+}
+

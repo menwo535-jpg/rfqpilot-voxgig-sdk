@@ -1,0 +1,74 @@
+# Entity: quote
+
+main: kit: entity: quote: {
+
+  alias: field: {}
+
+  fields: {
+    artifacts: {
+      h: "Artifacts"
+      n: "artifacts"
+      r: true
+      t: "`$OBJECT`"
+    }
+    catalogue_csv: {
+      h: "Catalogue Csv"
+      n: "catalogue_csv"
+      r: true
+      t: "`$STRING`"
+    }
+    include_xlsx: {
+      h: "Include Xlsx"
+      n: "include_xlsx"
+      r: false
+      t: "`$BOOLEAN`"
+    }
+    quote: {
+      h: "Quote"
+      n: "quote"
+      r: true
+      sh: "Original processor result; retains rows, review flags and exact decimal amounts as strings"
+      t: "`$OBJECT`"
+    }
+    rfq: {
+      h: "Rfq"
+      n: "rfq"
+      r: true
+      t: "`$OBJECT`"
+    }
+  }
+
+  name: "quote"
+  op: {
+    create: {
+      name: "create"
+      points: [
+        {
+          co: {
+            id: "POST /quote"
+            source: "openapi3"
+            version: 2
+          }
+          m: "POST"
+          o: "/quote"
+          s: [
+            {
+              lit: "quote"
+            }
+          ]
+          t: {
+            req: {
+              catalogue_csv: "`reqdata.catalogue_csv`"
+              include_xlsx: "`reqdata.include_xlsx`"
+              rfq: "`reqdata.rfq`"
+            }
+            res: "`body`"
+          }
+        }
+      ]
+    }
+  }
+
+
+
+}

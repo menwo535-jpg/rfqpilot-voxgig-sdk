@@ -1,0 +1,2 @@
+consumer-typecheck.ts(6,23): error TS2345: Argument of type '{ rfq: { format: string; content: string; }; catalogue_csv: string; }' is not assignable to parameter of type 'QuoteCreateData'.
+  Type '{ rfq: { format: string; content: string; }; catalogue_csv: string; }' is missing the following properties from type 'QuoteCreateData': artifacts, quote

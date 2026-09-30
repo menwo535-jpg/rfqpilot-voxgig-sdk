@@ -1,0 +1,48 @@
+{
+  "existing": {
+    "quote": {
+      "QUOTE00": {
+        "artifacts": {},
+        "catalogue_csv": "s33",
+        "include_xlsx": true,
+        "quote": {},
+        "rfq": {},
+        "id": "QUOTE00"
+      },
+      "QUOTE01": {
+        "artifacts": {},
+        "catalogue_csv": "s65",
+        "include_xlsx": true,
+        "quote": {},
+        "rfq": {},
+        "id": "QUOTE01"
+      },
+      "QUOTE02": {
+        "artifacts": {},
+        "catalogue_csv": "s97",
+        "include_xlsx": true,
+        "quote": {},
+        "rfq": {},
+        "id": "QUOTE02"
+      }
+    }
+  },
+  "new": {
+    "quote": {
+      "quote_ref01": {
+        "artifacts": {},
+        "catalogue_csv": "sc9",
+        "include_xlsx": true,
+        "quote": {},
+        "rfq": {}
+      }
+    }
+  },
+  "requests": {
+    "POST /quote": {
+      "provenance": "operation-contract",
+      "version": 2,
+      "source": "openapi3"
+    }
+  }
+}
