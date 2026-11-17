@@ -7,31 +7,42 @@ permissions: {}
 jobs:
   read:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 2
     steps:
-      - name: Read public source records without credentials
+      - name: Read one public source without credentials
         shell: python
         run: |
-          import urllib.request,json,hashlib,datetime
-          urls=["https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=bounty&limit=15&sort=latest&since=2026-11-10T00%3A00%3A00Z","https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=%22will%20pay%22%20fix&limit=15&sort=latest&since=2026-11-01T00%3A00%3A00Z","https://api.bountyhub.dev/api/bounties?page=2&limit=15"]
-          for url in urls:
-              row={"url":url,"captured_at":datetime.datetime.now(datetime.timezone.utc).isoformat()}
-              try:
-                  req=urllib.request.Request(url,headers={"User-Agent":"Public project research / read-only","Accept":"application/json"})
-                  with urllib.request.urlopen(req,timeout=20) as response:
-                      raw=response.read(2000001)
-                      if len(raw)>2000000: raise ValueError("Response exceeds2MB")
-                      data=json.loads(raw.decode("utf-8"))
-                      row.update(status=response.status,final_url=response.url,sha256=hashlib.sha256(raw).hexdigest())
-                      if isinstance(data,dict) and isinstance(data.get("posts"),list):
-                          row["cursor"]=data.get("cursor")
-                          row["items"]=[{"source_url":"https://bsky.app/profile/"+p["author"]["handle"]+"/post/"+p["uri"].rsplit("/",1)[-1],"uri":p["uri"],"author":p["author"]["handle"],"text":p.get("record",{}).get("text"),"created_at":p.get("record",{}).get("createdAt"),"indexed_at":p.get("indexedAt"),"reply_count":p.get("replyCount"),"links":[f.get("uri") for a in p.get("record",{}).get("facets",[]) for f in a.get("features",[]) if f.get("uri")]} for p in data["posts"][:15]]
-                      elif isinstance(data,dict) and isinstance(data.get("data"),list):
-                          keep=("id","title","htmlURL","body","amount","totalAmount","assignmentType","issueState","claimed","solved","retracted","paymentStatus","createdAt","githubCreatedAt","additionalDescription")
-                          row["items"]=[{k:p.get(k) for k in keep} for p in data["data"][:15]]
-                          row["hasNextPage"]=data.get("hasNextPage")
-                      else:
-                          row["data"]=data
-              except Exception as exc:
-                  row["error"]=str(exc)
-              print("PUBLIC_SOURCE_CAPTURE "+json.dumps(row,ensure_ascii=False),flush=True)
+          import urllib.request,urllib.error,json,hashlib,datetime,re
+          from html.parser import HTMLParser
+          class P(HTMLParser):
+              def __init__(self): super().__init__();self.skip=0;self.text=[];self.links=[];self.scripts=[]
+              def handle_starttag(self,t,a):
+                  a=dict(a)
+                  if t in ('script','style'): self.skip+=1
+                  if t=='a' and a.get('href'): self.links.append(a['href'])
+                  if t=='script' and a.get('src'): self.scripts.append(a['src'])
+              def handle_endtag(self,t):
+                  if t in ('script','style'):self.skip=max(0,self.skip-1)
+              def handle_data(self,x):
+                  if not self.skip and x.strip():self.text.append(x.strip())
+          url="https://bountycaster.xyz/"
+          row={'url':url,'captured_at':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+          try:
+              with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'Public project research / read-only','Accept':'text/html,application/json;q=0.9'}),timeout=25) as response:
+                  raw=response.read(2000001)
+                  if len(raw)>2000000:raise ValueError('Response exceeds2MB')
+                  body=raw.decode('utf-8'); row.update(status=response.status,final_url=response.url,sha256=hashlib.sha256(raw).hexdigest())
+                  try:
+                      d=json.loads(body)
+                      if isinstance(d,dict) and isinstance(d.get('hits'),list):
+                          row['items']=[{k:x.get(k) for k in ('objectID','title','url','author','created_at','story_text','num_comments')}|{'source_url':'https://news.ycombinator.com/item?id='+str(x['objectID'])} for x in d['hits'][:15]]
+                      elif isinstance(d,dict) and isinstance(d.get('children'),list):
+                          rows=[x for x in d['children'] if 'SEEKING FREELANCER' in re.sub('<[^>]+>',' ',x.get('text') or '').upper()]
+                          row.update(total_comments=len(d['children']),matched_comments=len(rows),items=[{k:x.get(k) for k in ('id','author','created_at','text','children')}|{'source_url':'https://news.ycombinator.com/item?id='+str(x['id'])} for x in rows[:15]])
+                      else:row['data']=d
+                  except ValueError:
+                      p=P();p.feed(body);row.update(text='\n'.join(p.text)[:24000],links=p.links[:140],scripts=p.scripts[:35])
+          except Exception as exc:
+              row['error']=str(exc)
+              if isinstance(exc,urllib.error.HTTPError):row['error_status']=exc.code;row['retry_after']=exc.headers.get('Retry-After')
+          print('PUBLIC_SOURCE_CAPTURE '+json.dumps(row,ensure_ascii=False),flush=True)
