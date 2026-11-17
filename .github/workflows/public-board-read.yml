@@ -26,7 +26,8 @@ jobs:
              for i in range(20):
               try:
                tabs=json.load(urllib.request.urlopen("http://127.0.0.1:9222/json",timeout=1))
-               if tabs:break
+               if any(t.get("type")=="page" for t in tabs):break
+               time.sleep(.5)
               except Exception:time.sleep(.5)
              target=next(t for t in tabs if t.get("type")=="page")
              js=r"""const ws=new WebSocket(process.argv[1]);let seq=0;const pending=new Map();
@@ -47,5 +48,5 @@ jobs:
              if not lines:raise ValueError("Contact disclosure unavailable: "+r.stderr[-800:])
              row.update(json.loads(lines[-1]))
             finally:p.terminate()
-          except Exception as e:row["error"]=str(e)
+          except Exception as e:row["error"]=type(e).__name__+": "+str(e)
           print("PUBLIC_SOURCE_CAPTURE "+json.dumps(row,ensure_ascii=False),flush=True)
