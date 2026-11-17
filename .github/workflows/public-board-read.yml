@@ -31,7 +31,7 @@ jobs:
                   raw=response.read(2000001)
                   if len(raw)>2000000: raise ValueError("Response exceeds2MB")
                   return response.status,response.url,raw
-          for url in ("https://www.bountyhub.dev/en/bounties","https://app.opire.dev/api/backend/rewards","https://bounties.monero.social/"):
+          for url in ("https://www.bountyhub.dev/en/bounties","https://issuehunt.io/","https://www.devsbounty.com/"):
               row={"url":url,"captured_at":datetime.datetime.now(datetime.timezone.utc).isoformat()}
               try:
                   status,final,raw=get(url); body=raw.decode("utf-8"); page=Page(); page.feed(body)
@@ -40,9 +40,9 @@ jobs:
                   row.update(status=status,final_url=final,sha256=hashlib.sha256(raw).hexdigest(),text="\n".join(page.text)[:20000],links=list(dict.fromkeys(urllib.parse.urljoin(final,x) for x in page.links))[:120])
                   scripts=list(dict.fromkeys(urllib.parse.urljoin(final,x) for x in page.scripts))
                   chosen=[x for x in scripts if urllib.parse.urlsplit(x).netloc==urllib.parse.urlsplit(final).netloc and ("page-" in x or "layout-" in x)]
-                  if not chosen: chosen=[x for x in scripts if urllib.parse.urlsplit(x).netloc==urllib.parse.urlsplit(final).netloc][-12:]
+                  chosen=[x for x in scripts if urllib.parse.urlsplit(x).netloc==urllib.parse.urlsplit(final).netloc]
                   row["script_hints"]=[]
-                  for script in chosen[:12]:
+                  for script in chosen[:45]:
                       hint={"url":script}
                       try:
                           _,_,data=get(script); text=data.decode("utf-8")
