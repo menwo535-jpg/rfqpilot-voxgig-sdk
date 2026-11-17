@@ -27,14 +27,16 @@ jobs:
               def handle_data(self,data):
                   if not self.skip and data.strip(): self.text.append(data.strip())
           def get(url):
-              with urllib.request.urlopen(urllib.request.Request(url,headers={"User-Agent":"Public project research / read-only","Accept":"application/json,text/html,application/javascript"}),timeout=20) as response:
+              with urllib.request.urlopen(urllib.request.Request(url,headers={"User-Agent":"Public project research / read-only","Accept":"text/html,application/json;q=0.9,application/javascript;q=0.8"}),timeout=20) as response:
                   raw=response.read(2000001)
                   if len(raw)>2000000: raise ValueError("Response exceeds2MB")
                   return response.status,response.url,raw
-          for url in ("https://www.bountyhub.dev/en","https://app.opire.dev/home"):
+          for url in ("https://www.bountyhub.dev/en/bounties","https://app.opire.dev/api/backend/rewards","https://bounties.monero.social/"):
               row={"url":url,"captured_at":datetime.datetime.now(datetime.timezone.utc).isoformat()}
               try:
                   status,final,raw=get(url); body=raw.decode("utf-8"); page=Page(); page.feed(body)
+                  try: row["json_text"]=json.dumps(json.loads(body),ensure_ascii=False)[:60000]
+                  except ValueError: pass
                   row.update(status=status,final_url=final,sha256=hashlib.sha256(raw).hexdigest(),text="\n".join(page.text)[:20000],links=list(dict.fromkeys(urllib.parse.urljoin(final,x) for x in page.links))[:120])
                   scripts=list(dict.fromkeys(urllib.parse.urljoin(final,x) for x in page.scripts))
                   chosen=[x for x in scripts if urllib.parse.urlsplit(x).netloc==urllib.parse.urlsplit(final).netloc and ("page-" in x or "layout-" in x)]
