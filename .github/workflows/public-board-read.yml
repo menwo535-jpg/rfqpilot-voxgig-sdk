@@ -24,7 +24,7 @@ jobs:
                   if t in ("script","style"):self.skip=max(0,self.skip-1)
               def handle_data(self,x):
                   if not self.skip and x.strip():self.text.append(x.strip())
-          url="https://eleduck.com/"
+          url="https://gitpay.me/#/explore/issues"
           row={"url":url,"captured_at":datetime.datetime.now(datetime.timezone.utc).isoformat(),"read_only":True,"browser_location":"isolated LinuxCI, no user desktop/profile","http_status_unverified":True}
           try:
               chrome=shutil.which("google-chrome") or shutil.which("chromium")
